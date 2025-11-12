@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISHAAN's ASCII Gen</title>
+<style>
+  :root {
+    --palette-1: #f0e491;
+    --palette-2: #bac962;
+    --palette-3: #6a8d4b;
+    --palette-4: #2b6a4d;
+  }
+
+  * { 
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    background: var(--palette-1);
+    color: #1d1d1f;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 12px;
+    letter-spacing: -1.5px;
+  }
+  
+  .subtitle {
+    color: #6e6e73;
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+  }
+  
+  .container {
+    background: var(--palette-2);
+    padding: 48px;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 900px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .container:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+  
+  .upload-section {
+    text-align: center;
+    padding: 60px 20px;
+    border: 2px dashed var(--palette-3);
+    border-radius: 14px;
+    background: var(--palette-2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .upload-section:hover {
+    border-color: var(--palette-4);
+    background: #f0f7ff;
+  }
+  
+  .upload-section.dragover {
+    border-color: var(--palette-4);
+    background: #e6f2ff;
+  }
+  
+  input[type="file"] { 
+    display: none; 
+  }
+  
+  .upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: var(--palette-4);
+    color: white;
+    border-radius: 980px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    border: none;
+  }
+  
+  .upload-label:hover {
+    background: #0077ed;
+  }
+  
+  .upload-label:active {
+    transform: scale(0.98);
+  }
+  
+  .upload-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .upload-text {
+    margin-top: 16px;
+    color: #86868b;
+    font-size: 0.9rem;
+  }
+  
+  .preview-container {
+    margin: 32px 0;
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .section-label {
+    display: block;
+    color: #86868b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+  }
+  
+  img.preview {
+    width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #f5f5f7;
+  }
+  
+  .ascii-container {
+    display: none;
+    margin-top: 32px;
+    animation: fadeIn 0.5s ease;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .control-group {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    background: var(--palette-3);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  
+  .btn:hover {
+    background: var(--palette-4);
+  }
+  
+  .btn:active {
+    transform: scale(0.98);
+  }
+  
+  .ascii-output {
+    background: #fafafa;
+    border: 1px solid var(--palette-2);
+    border-radius: 12px;
+    padding: 24px;
+    max-height: 600px;
+    overflow: auto;
+  }
+  
+  .ascii-output::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .ascii-output::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .ascii-output::-webkit-scrollbar-thumb {
+    background: #d2d2d7;
+    border-radius: 5px;
+    border: 2px solid #fafafa;
+  }
+  
+  .ascii-output::-webkit-scrollbar-thumb:hover {
+    background: #b8b8bd;
+  }
+  
+  pre {
+    text-align: left;
+    font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+    font-size: 7px;
+    line-height: 6px;
+    white-space: pre;
+    overflow-x: auto;
+    user-select: text;
+    margin: 0;
+  }
+  
+  pre span { 
+    font-weight: bold; 
+  }
+  
+  canvas { 
+    display: none; 
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(29, 29, 31, 0.95);
+    backdrop-filter: blur(20px);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 980px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  @media (max-width: 768px) {
+    body {
+      padding: 20px;
+    }
+    
+    .container {
+      padding: 32px 24px;
+    }
+    
+    .upload-section {
+      padding: 40px 20px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+    }
+    
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .control-group {
+      width: 100%;
+    }
+    
+    .btn {
+      flex: 1;
+    }
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: #000;
+      color: #f5f5f7;
+    }
+    
+    h1 {
+      color: #f5f5f7;
+    }
+    
+    .subtitle {
+      color: #a1a1a6;
+    }
+    
+    .container {
+      background: #1d1d1f;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .upload-section {
+      background: #2d2d2d;
+      border-color: #424245;
+    }
+    
+    .upload-section:hover {
+      background: #1a2a3a;
+      border-color: #0071e3;
+    }
+    
+    .upload-text {
+      color: #a1a1a6;
+    }
+    
+    .section-label {
+      color: #a1a1a6;
+    }
+    
+    img.preview {
+      background: #2d2d2d;
+    }
+    
+    .btn {
+      background: #2d2d2d;
+      color: #f5f5f7;
+    }
+    
+    .btn:hover {
+      background: #3d3d3d;
+    }
+    
+    .ascii-output {
+      background: #1d1d1f;
+      border-color: #424245;
+    }
+    
+    .ascii-output::-webkit-scrollbar-thumb {
+      background: #424245;
+      border-color: #1d1d1f;
+    }
+    
+    .ascii-output::-webkit-scrollbar-thumb:hover {
+      background: #535356;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Ishaan's ASCII Gen</h1>
+    <p class="subtitle">Transform your images into colorful ASCII art</p>
+  </div>
+
+  <div class="container">
+    <div class="upload-section" id="uploadSection">
+      <label for="fileInput" class="upload-label">
+        <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        Choose Image
+      </label>
+      <input type="file" id="fileInput" accept="image/*">
+      <p class="upload-text">or drag and drop</p>
+    </div>
+
+    <div class="preview-container" id="previewContainer">
+      <span class="section-label">Original Image</span>
+      <img id="preview" class="preview">
+    </div>
+
+    <div class="ascii-container" id="asciiContainer">
+      <div class="controls">
+        <span class="section-label" style="margin: 0;">ASCII Output</span>
+        <div class="control-group">
+          <button class="btn" id="copyBtn">Copy</button>
+          <button class="btn" id="downloadBtn">Download</button>
+        </div>
+      </div>
+      <div class="ascii-output">
+        <pre id="ascii"></pre>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+  <div class="toast" id="toast">Copied to clipboard</div>
+
+  <script>
+    const input = document.getElementById('fileInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const output = document.getElementById('ascii');
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('previewContainer');
+    const asciiContainer = document.getElementById('asciiContainer');
+    const uploadSection = document.getElementById('uploadSection');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const toast = document.getElementById('toast');
+    
+    const chars = "@#W$9876543210?!abc;:+=-,._ ";
+    let currentAscii = "";
+
+    // File input handler
+    input.addEventListener('change', handleFile);
+
+    // Drag and drop handlers
+    uploadSection.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadSection.classList.add('dragover');
+    });
+
+    uploadSection.addEventListener('dragleave', () => {
+      uploadSection.classList.remove('dragover');
+    });
+
+    uploadSection.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadSection.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        processFile(file);
+      }
+    });
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      processFile(file);
+    }
+
+    function processFile(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => processImage(img);
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function processImage(img) {
+      preview.src = img.src;
+      previewContainer.style.display = "block";
+      
+      const width = 120;
+      const height = Math.floor((img.height / img.width) * width * 0.55);
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      const data = ctx.getImageData(0, 0, width, height).data;
+      let asciiHTML = "";
+      let asciiPlain = "";
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
+          const char = chars[charIndex];
+          asciiHTML += `<span style="color:rgb(${r},${g},${b})">${char}</span>`;
+          asciiPlain += char;
+        }
+        asciiHTML += "\n";
+        asciiPlain += "\n";
+      }
+      
+      output.innerHTML = asciiHTML;
+      currentAscii = asciiPlain;
+      asciiContainer.style.display = "block";
+    }
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentAscii).then(() => {
+        showToast('Copied to clipboard');
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([currentAscii], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ascii-art.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Downloaded');
+    });
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>
